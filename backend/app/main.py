@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.db import create_tables
 from app.middleware import RequestLoggingMiddleware
-from app.routers import todos
+from app.routers import todos, auth, users
 
 # Configure logging
 logging.basicConfig(
@@ -18,17 +18,17 @@ logger = logging.getLogger(__name__)
 
 # Create FastAPI app
 app = FastAPI(
-    title=settings.app_title,
-    description=settings.app_description,
-    version=settings.app_version,
+    title=settings.APP_TITLE,
+    description=settings.APP_DESCRIPTION,
+    version=settings.APP_VERSION,
     docs_url="/docs",
     redoc_url="/redoc",
 )
 
-# Add CORS middleware (configure as needed)
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,13 +38,15 @@ app.add_middleware(
 app.add_middleware(RequestLoggingMiddleware)
 
 # Include routers
-app.include_router(todos.router)
+app.include_router(auth.router, prefix="/api")
+app.include_router(users.router, prefix="/api")
+app.include_router(todos.router, prefix="/api")
 
 
 @app.on_event("startup")
 async def startup_event():
     """Initialize database tables on startup."""
-    logger.info("Starting up Toado API...")
+    logger.info("Starting up Toadoo API...")
     create_tables()
     logger.info("Database tables created successfully")
 
@@ -52,14 +54,15 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on shutdown."""
-    logger.info("Shutting down Toado API...")
+    logger.info("Shutting down Toadoo API...")
 
 
 @app.get("/", tags=["health"])
 async def root():
     """Root endpoint for health check."""
     return {
-        "message": "Welcome to Toado API! 🐸",
+        "message": "Welcome to Toadoo API! 🐸",
+        "version": settings.APP_VERSION,
         "docs": "/docs",
         "redoc": "/redoc",
     }
@@ -68,4 +71,4 @@ async def root():
 @app.get("/health", tags=["health"])
 async def health_check():
     """Health check endpoint."""
-    return {"status": "healthy", "service": "toado-api"}
+    return {"status": "healthy", "service": "toadoo-api", "version": settings.APP_VERSION}
