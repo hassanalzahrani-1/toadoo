@@ -1,13 +1,16 @@
 """FastAPI application entry point."""
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
 from app.db import create_tables
 from app.middleware import RequestLoggingMiddleware
 from app.routers import todos, auth, users, admin
+from app.dependencies.rate_limit import limiter
 
 # Configure logging
 logging.basicConfig(

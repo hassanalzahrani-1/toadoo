@@ -1,34 +1,62 @@
-"""Email service (placeholder for Phase 2)."""
+"""Email service with mock implementation for development."""
 import logging
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 
-async def send_verification_email(email: str, token: str) -> None:
+def send_verification_email(email: str, token: str) -> None:
     """
-    Send a verification email (mock implementation for Phase 2).
+    Send email verification link (mock implementation).
     
-    Phase 2 will implement actual email sending or mock the process.
-    For now, this just logs the action.
+    In production, integrate with email provider (SendGrid, AWS SES, etc.).
+    For now, logs the verification link to console.
     """
-    logger.info(
-        "Mock email sent to %s with verification token: %s",
-        email,
-        token[:10] + "...",
-    )
-    # In Phase 2, integrate with email provider or mock service
-    raise NotImplementedError("Email verification will be implemented in Phase 2")
+    verification_link = f"http://localhost:3000/verify-email?token={token}"
+    
+    logger.info("=" * 80)
+    logger.info("📧 EMAIL VERIFICATION")
+    logger.info(f"To: {email}")
+    logger.info(f"Subject: Verify your Toadoo account")
+    logger.info(f"Verification Link: {verification_link}")
+    logger.info("=" * 80)
+    
+    if settings.EMAIL_ENABLED:
+        # TODO: Integrate with actual email service
+        pass
 
 
-async def send_password_reset_email(email: str, token: str) -> None:
+def send_password_reset_email(email: str, token: str) -> None:
     """
-    Send a password reset email (mock implementation for Phase 2).
+    Send password reset link (mock implementation).
     
-    Phase 2 will implement actual email sending or mock the process.
+    In production, integrate with email provider.
+    For now, logs the reset link to console.
     """
-    logger.info(
-        "Mock password reset email sent to %s with token: %s",
-        email,
-        token[:10] + "...",
-    )
-    raise NotImplementedError("Password reset will be implemented in Phase 2")
+    reset_link = f"http://localhost:3000/reset-password?token={token}"
+    
+    logger.info("=" * 80)
+    logger.info("🔑 PASSWORD RESET")
+    logger.info(f"To: {email}")
+    logger.info(f"Subject: Reset your Toadoo password")
+    logger.info(f"Reset Link: {reset_link}")
+    logger.info("=" * 80)
+    
+    if settings.EMAIL_ENABLED:
+        # TODO: Integrate with actual email service
+        pass
+
+
+def send_welcome_email(email: str, username: str) -> None:
+    """
+    Send welcome email to new users (mock implementation).
+    """
+    logger.info("=" * 80)
+    logger.info("👋 WELCOME EMAIL")
+    logger.info(f"To: {email}")
+    logger.info(f"Subject: Welcome to Toadoo, {username}!")
+    logger.info("=" * 80)
+    
+    if settings.EMAIL_ENABLED:
+        # TODO: Integrate with actual email service
+        pass
