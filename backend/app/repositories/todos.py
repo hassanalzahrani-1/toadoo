@@ -87,3 +87,24 @@ def count_user_todos_by_status(db: Session, user_id: int, status: TodoStatus) ->
         Todo.owner_id == user_id,
         Todo.status == status
     ).count()
+
+
+# Admin functions
+def list_all_todos(
+    db: Session,
+    status: Optional[TodoStatus] = None,
+    skip: int = 0,
+    limit: int = 100,
+) -> List[Todo]:
+    """List all todos across all users (admin only)."""
+    query = db.query(Todo)
+    
+    if status:
+        query = query.filter(Todo.status == status)
+    
+    return query.offset(skip).limit(limit).all()
+
+
+def count_all_todos(db: Session) -> int:
+    """Count total todos in system (admin only)."""
+    return db.query(Todo).count()
