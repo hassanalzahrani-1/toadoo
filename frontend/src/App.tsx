@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import DashboardLayout from './components/layout/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import TasksKanban from './pages/TasksKanban';
+import Admin from './pages/Admin';
 
 function App() {
   const { loading, isAuthenticated } = useAuth();
@@ -34,6 +35,7 @@ function App() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="tasks" element={<TasksKanban />} />
+        <Route path="admin" element={<Admin />} />
       </Route>
       
       {/* Catch all */}

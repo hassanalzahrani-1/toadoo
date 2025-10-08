@@ -95,3 +95,24 @@ export const todosAPI = {
   delete: (id: number) =>
     api.delete(`/todos/${id}`),
 };
+
+// Admin API
+export const adminAPI = {
+  getUsers: (params?: { skip?: number; limit?: number; is_active?: boolean }) =>
+    api.get('/admin/users', { params }),
+  
+  getUser: (userId: number) =>
+    api.get(`/admin/users/${userId}`),
+  
+  updateUserRole: (userId: number, role: string) =>
+    api.put(`/admin/users/${userId}/role?role=${role}`),
+  
+  updateUserStatus: (userId: number, is_active: boolean) =>
+    api.put(`/admin/users/${userId}/status?is_active=${is_active}`),
+  
+  deleteUser: (userId: number) =>
+    api.delete(`/admin/users/${userId}`),
+  
+  getStats: () =>
+    api.get('/admin/stats'),
+};
