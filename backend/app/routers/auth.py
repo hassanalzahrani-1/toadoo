@@ -1,8 +1,9 @@
 """Authentication routes for user registration, login, and token management."""
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from jose import JWTError
 
+from app.config import settings
 from app.db import get_db
 from app.models import User
 from app.schemas import (
@@ -14,13 +15,15 @@ from app.repositories import users as user_repo
 from app.repositories import tokens as token_repo
 from app.services.email import send_verification_email, send_password_reset_email
 from app.dependencies.auth import get_current_user, get_current_active_user
+from app.dependencies.rate_limit import limiter
 
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
 
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-async def register(user_data: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit(settings.RATE_LIMIT_REGISTER)
+async def register(request: Request, user_data: UserCreate, db: Session = Depends(get_db)):
     """
     Register a new user.
     
@@ -56,7 +59,8 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
-async def login(credentials: UserLogin, db: Session = Depends(get_db)):
+@limiter.limit(settings.RATE_LIMIT_LOGIN)
+async def login(request: Request, credentials: UserLogin, db: Session = Depends(get_db)):
     """
     Login with username/email and password.
     
@@ -235,14 +239,15 @@ async def resend_verification(
 
 
 @router.post("/forgot-password", status_code=status.HTTP_200_OK)
-async def forgot_password(request: PasswordResetRequest, db: Session = Depends(get_db)):
+@limiter.limit("3/hour")
+async def forgot_password(request: Request, reset_request: PasswordResetRequest, db: Session = Depends(get_db)):
     """
     Request password reset token.
     
     Sends reset token to user's email.
     """
     # Get user by email
-    user = user_repo.get_user_by_email(db, request.email)
+    user = user_repo.get_user_by_email(db, reset_request.email)
     
     # Always return success to prevent email enumeration
     if not user:

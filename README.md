@@ -137,11 +137,13 @@ pytest --cov=app tests/
 
 - [x] Phase 1: Basic CRUD API
 - [ ] Phase 2: Authentication + Frontend (In Progress)
-  - [ ] User management & JWT
-  - [ ] User-scoped todos
-  - [ ] RBAC & admin endpoints
-  - [ ] Rate limiting
-  - [ ] Email services (mock)
+  - [x] User management & JWT
+  - [x] User-scoped todos
+  - [x] RBAC & admin endpoints
+  - [x] Rate limiting (setup)
+  - [x] Email services (mock)
+  - [ ] Database migrations (Alembic)
+  - [ ] Testing suite
   - [ ] React frontend
   - [ ] Admin dashboard
 
