@@ -2,6 +2,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import DashboardLayout from './components/layout/DashboardLayout';
+import Dashboard from './pages/Dashboard';
 
 function App() {
   const { loading, isAuthenticated } = useAuth();
@@ -19,37 +21,22 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+      {/* Public routes */}
+      <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" replace />} />
+      <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/dashboard" replace />} />
       
-      {/* Redirect to login if not authenticated */}
-      <Route
-        path="/dashboard"
-        element={
-          isAuthenticated ? (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-              <div className="text-center space-y-6">
-                <h1 className="text-4xl font-bold">🐸 Dashboard</h1>
-                <p className="text-muted-foreground">Coming soon...</p>
-              </div>
-            </div>
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
-      
-      {/* Default route */}
+      {/* Protected routes with layout */}
       <Route
         path="/"
-        element={
-          isAuthenticated ? (
-            <Navigate to="/dashboard" replace />
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
+        element={isAuthenticated ? <DashboardLayout /> : <Navigate to="/login" replace />}
+      >
+        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="tasks" element={<div className="text-center py-12">Tasks page coming soon...</div>} />
+      </Route>
+      
+      {/* Catch all */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

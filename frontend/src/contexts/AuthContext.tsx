@@ -41,8 +41,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authAPI.getCurrentUser();
       setUser(response.data);
     } catch (error) {
+      console.error('Failed to fetch current user:', error);
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -52,10 +54,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response = await authAPI.login({ username, password });
     const { access_token, refresh_token } = response.data;
     
+    console.log('Login response:', { access_token, refresh_token });
+    
+    // Set tokens in localStorage first
     localStorage.setItem('access_token', access_token);
     localStorage.setItem('refresh_token', refresh_token);
     
-    await fetchCurrentUser();
+    console.log('Tokens saved to localStorage');
+    console.log('Access token from storage:', localStorage.getItem('access_token'));
+    
+    // Fetch user with the new token
+    try {
+      const userResponse = await authAPI.getCurrentUser();
+      console.log('User fetched:', userResponse.data);
+      setUser(userResponse.data);
+    } catch (error) {
+      console.error('Failed to fetch user after login:', error);
+      throw error;
+    }
   };
 
   const register = async (email: string, username: string, password: string) => {

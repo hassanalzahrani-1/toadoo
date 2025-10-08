@@ -62,8 +62,14 @@ export const authAPI = {
   logout: (refreshToken: string) =>
     api.post('/auth/logout', { refresh_token: refreshToken }),
   
-  getCurrentUser: () =>
-    api.get('/auth/me'),
+  getCurrentUser: () => {
+    const token = localStorage.getItem('access_token');
+    return api.get('/auth/me', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
   
   forgotPassword: (email: string) =>
     api.post('/auth/forgot-password', { email }),
