@@ -24,11 +24,20 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Don't intercept login/register requests
+    if (originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/register')) {
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
         const refreshToken = localStorage.getItem('refresh_token');
+        if (!refreshToken) {
+          throw new Error('No refresh token');
+        }
+        
         const response = await axios.post(`${API_URL}/auth/refresh`, {
           refresh_token: refreshToken,
         });
@@ -53,14 +62,14 @@ api.interceptors.response.use(
 
 // Auth API
 export const authAPI = {
-  register: (data: { email: string; username: string; password: string }) =>
-    api.post('/auth/register', data),
+  login: (username: string, password: string) =>
+    api.post('/auth/login', { username, password }),
   
-  login: (data: { username: string; password: string }) =>
-    api.post('/auth/login', data),
+  register: (email: string, username: string, password: string) =>
+    api.post('/auth/register', { email, username, password }),
   
-  logout: (refreshToken: string) =>
-    api.post('/auth/logout', { refresh_token: refreshToken }),
+  logout: () =>
+    api.post('/auth/logout'),
   
   getCurrentUser: () => {
     const token = localStorage.getItem('access_token');
@@ -76,6 +85,9 @@ export const authAPI = {
   
   resetPassword: (token: string, newPassword: string) =>
     api.post('/auth/reset-password', { token, new_password: newPassword }),
+  
+  deleteAccount: () =>
+    api.delete('/auth/me'),
 };
 
 // Todos API
@@ -94,4 +106,25 @@ export const todosAPI = {
   
   delete: (id: number) =>
     api.delete(`/todos/${id}`),
+};
+
+// Admin API
+export const adminAPI = {
+  getUsers: (params?: { skip?: number; limit?: number; is_active?: boolean }) =>
+    api.get('/admin/users', { params }),
+  
+  getUser: (userId: number) =>
+    api.get(`/admin/users/${userId}`),
+  
+  updateUserRole: (userId: number, role: string) =>
+    api.put(`/admin/users/${userId}/role?role=${role}`),
+  
+  updateUserStatus: (userId: number, is_active: boolean) =>
+    api.put(`/admin/users/${userId}/status?is_active=${is_active}`),
+  
+  deleteUser: (userId: number) =>
+    api.delete(`/admin/users/${userId}`),
+  
+  getStats: () =>
+    api.get('/admin/stats'),
 };

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,25 +24,35 @@ export default function Register() {
 
     // Validation
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      const msg = 'Passwords do not match';
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
     // Password validation
     if (password.length < 8) {
-      setError('Password must be at least 8 characters long');
+      const msg = 'Password must be at least 8 characters long';
+      setError(msg);
+      toast.error(msg);
       return;
     }
     if (!/[A-Z]/.test(password)) {
-      setError('Password must contain at least one uppercase letter');
+      const msg = 'Password must contain at least one uppercase letter';
+      setError(msg);
+      toast.error(msg);
       return;
     }
     if (!/[a-z]/.test(password)) {
-      setError('Password must contain at least one lowercase letter');
+      const msg = 'Password must contain at least one lowercase letter';
+      setError(msg);
+      toast.error(msg);
       return;
     }
     if (!/[0-9]/.test(password)) {
-      setError('Password must contain at least one digit');
+      const msg = 'Password must contain at least one digit';
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -49,20 +60,23 @@ export default function Register() {
 
     try {
       await register(email, username, password);
+      toast.success('Account created successfully! Welcome to Toadoo!');
       navigate('/dashboard');
     } catch (err: any) {
       // Handle validation errors
+      let message = 'Registration failed. Please try again.';
+      
       if (err.response?.data?.detail) {
         if (Array.isArray(err.response.data.detail)) {
           // Pydantic validation errors
-          const errors = err.response.data.detail.map((e: any) => e.msg).join(', ');
-          setError(errors);
+          message = err.response.data.detail.map((e: any) => e.msg).join(', ');
         } else {
-          setError(err.response.data.detail);
+          message = err.response.data.detail;
         }
-      } else {
-        setError('Registration failed. Please try again.');
       }
+      
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }

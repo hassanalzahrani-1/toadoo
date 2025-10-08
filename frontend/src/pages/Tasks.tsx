@@ -226,7 +226,7 @@ export default function Tasks() {
                     id="priority"
                     value={priority}
                     onChange={(e) => setPriority(e.target.value as any)}
-                    className="w-full px-3 py-2 border rounded-md"
+                    className="w-full px-3 py-2 border rounded-md bg-background text-foreground"
                   >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>

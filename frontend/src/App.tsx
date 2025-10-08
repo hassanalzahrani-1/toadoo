@@ -1,10 +1,14 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import { useAuth } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import DashboardLayout from './components/layout/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import TasksKanban from './pages/TasksKanban';
+import Admin from './pages/Admin';
+import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 
 function App() {
   const { loading, isAuthenticated } = useAuth();
@@ -21,7 +25,9 @@ function App() {
   }
 
   return (
-    <Routes>
+    <>
+      <Toaster position="top-right" richColors />
+      <Routes>
       {/* Public routes */}
       <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" replace />} />
       <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/dashboard" replace />} />
@@ -34,11 +40,15 @@ function App() {
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="tasks" element={<TasksKanban />} />
+        <Route path="admin" element={<Admin />} />
+        <Route path="profile" element={<Profile />} />
+        <Route path="settings" element={<Settings />} />
       </Route>
       
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }
 

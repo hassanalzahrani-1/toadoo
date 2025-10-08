@@ -9,6 +9,7 @@ interface User {
   role: string;
   is_active: boolean;
   is_verified: boolean;
+  created_at: string;
 }
 
 interface AuthContextType {
@@ -51,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = async (username: string, password: string) => {
-    const response = await authAPI.login({ username, password });
+    const response = await authAPI.login(username, password);
     const { access_token, refresh_token } = response.data;
     
     console.log('Login response:', { access_token, refresh_token });
@@ -75,16 +76,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (email: string, username: string, password: string) => {
-    await authAPI.register({ email, username, password });
+    await authAPI.register(email, username, password);
     // Auto-login after registration
     await login(username, password);
   };
 
   const logout = () => {
-    const refreshToken = localStorage.getItem('refresh_token');
-    if (refreshToken) {
-      authAPI.logout(refreshToken).catch(() => {});
-    }
+    authAPI.logout().catch(() => {});
     
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');

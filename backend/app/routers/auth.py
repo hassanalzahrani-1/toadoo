@@ -293,3 +293,26 @@ async def reset_password(reset_data: PasswordReset, db: Session = Depends(get_db
     token_repo.revoke_all_user_tokens(db, user.id)
     
     return user
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_account(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete your own account.
+    
+    This will permanently delete your account and all associated data (todos, tokens, etc.).
+    This action cannot be undone.
+    """
+    # Delete the user (cascade will delete todos and tokens)
+    success = user_repo.delete_user(db, current_user.id)
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete account"
+        )
+    
+    return None
