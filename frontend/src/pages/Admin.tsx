@@ -288,7 +288,7 @@ export default function Admin() {
                   id="role"
                   value={selectedRole}
                   onChange={(e) => setSelectedRole(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="w-full px-3 py-2 border rounded-md bg-background text-foreground"
                 >
                   <option value="user">User</option>
                   <option value="admin">Admin</option>
@@ -301,7 +301,7 @@ export default function Admin() {
                   id="active"
                   value={selectedActive ? 'active' : 'inactive'}
                   onChange={(e) => setSelectedActive(e.target.value === 'active')}
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="w-full px-3 py-2 border rounded-md bg-background text-foreground"
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>

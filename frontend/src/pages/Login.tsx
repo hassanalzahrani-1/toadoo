@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,14 +18,31 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setError('');
     setLoading(true);
 
     try {
       await login(username, password);
+      toast.success('Welcome back!');
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Login failed. Please try again.');
+      let message = 'Login failed. Please try again.';
+      
+      if (err.response?.data?.detail) {
+        const detail = err.response.data.detail;
+        // Handle array of validation errors (Pydantic)
+        if (Array.isArray(detail)) {
+          message = detail.map((e: any) => e.msg || e.message || String(e)).join(', ');
+        } else if (typeof detail === 'string') {
+          message = detail;
+        } else if (typeof detail === 'object') {
+          message = detail.msg || detail.message || JSON.stringify(detail);
+        }
+      }
+      
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
