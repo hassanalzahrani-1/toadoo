@@ -18,13 +18,8 @@ class TodoBase(BaseModel):
     @field_validator("due_date")
     @classmethod
     def validate_due_date(cls, v: Optional[datetime]) -> Optional[datetime]:
-        """Ensure due_date is not in the past."""
-        if v is not None:
-            # Make both datetimes timezone-aware for comparison
-            now = datetime.now(timezone.utc)
-            compare_date = v if v.tzinfo else v.replace(tzinfo=timezone.utc)
-            if compare_date < now:
-                raise ValueError("due_date cannot be in the past")
+        """Validate due_date format."""
+        # Allow past dates - users may want to track overdue tasks
         return v
 
 
