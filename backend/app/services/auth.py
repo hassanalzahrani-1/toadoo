@@ -15,6 +15,11 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(password: str) -> str:
     """Hash a password using bcrypt."""
+    # Ensure password is within bcrypt's 72-byte limit
+    password_bytes = password.encode('utf-8')
+    if len(password_bytes) > 72:
+        # Truncate to 72 bytes
+        password = password_bytes[:72].decode('utf-8', errors='ignore')
     return pwd_context.hash(password)
 
 
@@ -36,6 +41,10 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     """
     to_encode = data.copy()
     
+    # Ensure 'sub' is a string (required by JWT spec)
+    if 'sub' in to_encode and not isinstance(to_encode['sub'], str):
+        to_encode['sub'] = str(to_encode['sub'])
+    
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
@@ -53,7 +62,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 def create_refresh_token(data: dict) -> str:
     """
-    Create a JWT refresh token.
+    Create a JWT refresh token with longer expiration.
     
     Args:
         data: Dictionary containing claims to encode
@@ -62,6 +71,11 @@ def create_refresh_token(data: dict) -> str:
         Encoded JWT refresh token string
     """
     to_encode = data.copy()
+    
+    # Ensure 'sub' is a string (required by JWT spec)
+    if 'sub' in to_encode and not isinstance(to_encode['sub'], str):
+        to_encode['sub'] = str(to_encode['sub'])
+    
     expire = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     
     to_encode.update({
