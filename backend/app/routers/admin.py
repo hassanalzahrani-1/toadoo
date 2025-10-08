@@ -189,15 +189,20 @@ async def get_system_stats(
     Returns counts of users, todos, and other metrics.
     """
     from app.models import Todo
+    from sqlalchemy import func
     
     total_users = user_repo.count_users(db)
     active_users = len(user_repo.get_users(db, is_active=True, limit=10000))
     admin_users = len(user_repo.get_users(db, role=UserRole.ADMIN, limit=10000))
     
+    # Current session todos (active tasks on the board)
     total_todos = db.query(Todo).count()
     completed_todos = db.query(Todo).filter(Todo.status == TodoStatus.COMPLETED).count()
     pending_todos = db.query(Todo).filter(Todo.status == TodoStatus.PENDING).count()
     in_progress_todos = db.query(Todo).filter(Todo.status == TodoStatus.IN_PROGRESS).count()
+    
+    # Lifetime completed tasks (sum of all users' total_completed_count)
+    lifetime_completed = db.query(func.sum(User.total_completed_count)).scalar() or 0
     
     return {
         "users": {
@@ -210,6 +215,7 @@ async def get_system_stats(
             "total": total_todos,
             "completed": completed_todos,
             "pending": pending_todos,
-            "in_progress": in_progress_todos
+            "in_progress": in_progress_todos,
+            "lifetime_completed": lifetime_completed
         }
     }

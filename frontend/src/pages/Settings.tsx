@@ -6,13 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Bell, Lock, Palette, Globe, Clock, AlertTriangle } from 'lucide-react';
+import { Lock, Palette, AlertTriangle } from 'lucide-react';
 import { authAPI } from '@/lib/api';
 
 type Theme = 'light' | 'dark' | 'system';
-type TimeFormat = '12h' | '24h';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -20,35 +18,18 @@ export default function Settings() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  
   // Load settings from localStorage
-  const [emailNotifications, setEmailNotifications] = useState(() => 
-    localStorage.getItem('emailNotifications') !== 'false'
-  );
-  const [pushNotifications, setPushNotifications] = useState(() => 
-    localStorage.getItem('pushNotifications') === 'true'
-  );
   const [theme, setTheme] = useState<Theme>(() => 
     (localStorage.getItem('theme') as Theme) || 'light'
   );
-  const [timeFormat, setTimeFormat] = useState<TimeFormat>(() => 
-    (localStorage.getItem('timeFormat') as TimeFormat) || '12h'
-  );
-  const [language, setLanguage] = useState(() => 
-    localStorage.getItem('language') || 'en'
-  );
-  const [timezone, setTimezone] = useState(() => 
-    localStorage.getItem('timezone') || 'utc'
-  );
 
   // Save to localStorage when settings change
-  useEffect(() => {
-    localStorage.setItem('emailNotifications', String(emailNotifications));
-  }, [emailNotifications]);
-
-  useEffect(() => {
-    localStorage.setItem('pushNotifications', String(pushNotifications));
-  }, [pushNotifications]);
-
   useEffect(() => {
     localStorage.setItem('theme', theme);
     // Apply theme to document
@@ -61,20 +42,47 @@ export default function Settings() {
     }
   }, [theme]);
 
-  useEffect(() => {
-    localStorage.setItem('timeFormat', timeFormat);
-  }, [timeFormat]);
+  const handleChangePassword = async () => {
+    // Validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error('Please fill in all password fields');
+      return;
+    }
 
-  useEffect(() => {
-    localStorage.setItem('language', language);
-  }, [language]);
+    if (newPassword.length < 8) {
+      toast.error('New password must be at least 8 characters');
+      return;
+    }
 
-  useEffect(() => {
-    localStorage.setItem('timezone', timezone);
-  }, [timezone]);
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
 
-  const handleSavePreferences = () => {
-    toast.success('Preferences saved successfully!');
+    setIsChangingPassword(true);
+
+    try {
+      await authAPI.changePassword(currentPassword, newPassword);
+      
+      // Clear fields
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      
+      toast.success('Password changed successfully! Please login again.');
+      
+      // Logout and redirect to login
+      setTimeout(() => {
+        logout();
+        navigate('/login');
+      }, 1500);
+    } catch (error: any) {
+      console.error('Failed to change password:', error);
+      const message = error.response?.data?.detail || 'Failed to change password. Please try again.';
+      toast.error(message);
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   const handleDeleteAccount = async () => {
@@ -108,48 +116,6 @@ export default function Settings() {
         </p>
       </div>
 
-      {/* Notifications */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            <CardTitle>Notifications</CardTitle>
-          </div>
-          <CardDescription>Configure how you receive notifications</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Email Notifications</p>
-              <p className="text-sm text-muted-foreground">Receive email updates about your tasks</p>
-            </div>
-            <Button
-              variant={emailNotifications ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setEmailNotifications(!emailNotifications)}
-            >
-              {emailNotifications ? 'Enabled' : 'Disabled'}
-            </Button>
-          </div>
-          
-          <Separator />
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">Push Notifications</p>
-              <p className="text-sm text-muted-foreground">Receive browser notifications</p>
-            </div>
-            <Button
-              variant={pushNotifications ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setPushNotifications(!pushNotifications)}
-            >
-              {pushNotifications ? 'Enabled' : 'Disabled'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Password */}
       <Card>
         <CardHeader>
@@ -166,6 +132,9 @@ export default function Settings() {
               id="current-password"
               type="password"
               placeholder="Enter current password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              disabled={isChangingPassword}
             />
           </div>
           
@@ -174,7 +143,10 @@ export default function Settings() {
             <Input
               id="new-password"
               type="password"
-              placeholder="Enter new password"
+              placeholder="Enter new password (min 8 characters)"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              disabled={isChangingPassword}
             />
           </div>
           
@@ -184,10 +156,18 @@ export default function Settings() {
               id="confirm-password"
               type="password"
               placeholder="Confirm new password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={isChangingPassword}
             />
           </div>
           
-          <Button>Update Password</Button>
+          <Button 
+            onClick={handleChangePassword}
+            disabled={isChangingPassword}
+          >
+            {isChangingPassword ? 'Updating...' : 'Update Password'}
+          </Button>
         </CardContent>
       </Card>
 
@@ -227,84 +207,6 @@ export default function Settings() {
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Time Format */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            <CardTitle>Time Format</CardTitle>
-          </div>
-          <CardDescription>Choose how time is displayed</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Time Display</Label>
-            <div className="flex gap-2">
-              <Button 
-                variant={timeFormat === '12h' ? 'default' : 'outline'} 
-                className="flex-1"
-                onClick={() => setTimeFormat('12h')}
-              >
-                12-hour (2:30 PM)
-              </Button>
-              <Button 
-                variant={timeFormat === '24h' ? 'default' : 'outline'} 
-                className="flex-1"
-                onClick={() => setTimeFormat('24h')}
-              >
-                24-hour (14:30)
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Language & Region */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Globe className="h-5 w-5" />
-            <CardTitle>Language & Region</CardTitle>
-          </div>
-          <CardDescription>Set your language and timezone preferences</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="language">Language</Label>
-            <select
-              id="language"
-              className="w-full px-3 py-2 border rounded-md bg-background text-foreground"
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-            >
-              <option value="en">English</option>
-              <option value="ar">العربية (Arabic)</option>
-              <option value="es">Español</option>
-              <option value="fr">Français</option>
-            </select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="timezone">Timezone</Label>
-            <select
-              id="timezone"
-              className="w-full px-3 py-2 border rounded-md bg-background text-foreground"
-              value={timezone}
-              onChange={(e) => setTimezone(e.target.value)}
-            >
-              <option value="utc">UTC</option>
-              <option value="america/new_york">America/New York</option>
-              <option value="europe/london">Europe/London</option>
-              <option value="asia/dubai">Asia/Dubai</option>
-              <option value="asia/riyadh">Asia/Riyadh</option>
-              <option value="asia/tokyo">Asia/Tokyo</option>
-            </select>
-          </div>
-          
-          <Button onClick={handleSavePreferences}>Save Preferences</Button>
         </CardContent>
       </Card>
 

@@ -87,7 +87,10 @@ export const authAPI = {
     api.post('/auth/reset-password', { token, new_password: newPassword }),
   
   deleteAccount: () =>
-    api.delete('/auth/me'),
+    api.delete('/users/me'),
+  
+  changePassword: (oldPassword: string, newPassword: string) =>
+    api.post('/users/me/change-password', { old_password: oldPassword, new_password: newPassword }),
 };
 
 // Todos API
@@ -106,6 +109,9 @@ export const todosAPI = {
   
   delete: (id: number) =>
     api.delete(`/todos/${id}`),
+  
+  harvestCompleted: () =>
+    api.post('/todos/harvest-completed'),
 };
 
 // Admin API

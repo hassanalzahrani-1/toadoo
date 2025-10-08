@@ -3,10 +3,21 @@ import { adminAPI } from '@/lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Users, Activity, CheckCircle, AlertCircle, Trash2, Edit, RefreshCw } from 'lucide-react';
+import { Label as FormLabel } from '@/components/ui/label';
+import { Users, Activity, CheckCircle, AlertCircle, Trash2, Edit, RefreshCw, Search, BarChart3 } from 'lucide-react';
+import { Bar, BarChart, XAxis, YAxis, Pie, PieChart, Label } from "recharts";
+import type { ChartConfig } from "@/components/ui/chart";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from "@/components/ui/chart";
 
 interface User {
   id: number;
@@ -19,10 +30,19 @@ interface User {
 }
 
 interface Stats {
-  total_users: number;
-  active_users: number;
-  total_todos: number;
-  completed_todos: number;
+  users: {
+    total: number;
+    active: number;
+    admins: number;
+    inactive: number;
+  };
+  todos: {
+    total: number;
+    completed: number;
+    pending: number;
+    in_progress: number;
+    lifetime_completed: number;
+  };
 }
 
 export default function Admin() {
@@ -35,6 +55,7 @@ export default function Admin() {
   const [selectedActive, setSelectedActive] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -101,6 +122,11 @@ export default function Admin() {
     }
   };
 
+  const filteredUsers = users.filter(user => 
+    user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (loading) {
     return <div className="text-center py-12">Loading admin dashboard...</div>;
   }
@@ -131,7 +157,22 @@ export default function Admin() {
         </Button>
       </div>
 
-      {/* Stats Grid */}
+      {/* Tabs */}
+      <Tabs defaultValue="stats" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="stats">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Statistics
+          </TabsTrigger>
+          <TabsTrigger value="users">
+            <Users className="h-4 w-4 mr-2" />
+            User Management
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Stats Tab */}
+        <TabsContent value="stats" className="space-y-6">
+          {/* Stats Grid */}
       {stats && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
@@ -140,9 +181,9 @@ export default function Admin() {
               <Users className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.total_users}</div>
+              <div className="text-2xl font-bold">{stats.users.total}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats.active_users} active
+                {stats.users.active} active
               </p>
             </CardContent>
           </Card>
@@ -153,9 +194,9 @@ export default function Admin() {
               <Activity className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.active_users}</div>
+              <div className="text-2xl font-bold">{stats.users.active}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                {Math.round((stats.active_users / stats.total_users) * 100)}% of total
+                {stats.users.total > 0 ? Math.round((stats.users.active / stats.users.total) * 100) : 0}% of total
               </p>
             </CardContent>
           </Card>
@@ -166,7 +207,7 @@ export default function Admin() {
               <CheckCircle className="h-4 w-4 text-purple-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.total_todos}</div>
+              <div className="text-2xl font-bold">{stats.todos.total}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 Across all users
               </p>
@@ -175,40 +216,232 @@ export default function Admin() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Completed Tasks</CardTitle>
+              <CardTitle className="text-sm font-medium">Lifetime Completed</CardTitle>
               <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.completed_todos}</div>
+              <div className="text-2xl font-bold">{stats.todos.lifetime_completed}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats.total_todos > 0 ? Math.round((stats.completed_todos / stats.total_todos) * 100) : 0}% completion rate
+                All-time harvested tasks
               </p>
             </CardContent>
           </Card>
         </div>
       )}
 
-      {/* Users Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>User Management</CardTitle>
-          <CardDescription>View and manage all users in the system</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Username</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Verified</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((user) => (
+      {/* Charts Section */}
+      {stats && (
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Task Status Bar Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Current Tasks Breakdown</CardTitle>
+              <CardDescription>Active tasks on users' boards</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer
+                config={{
+                  tasks: {
+                    label: "Tasks",
+                  },
+                  pending: {
+                    label: "Pending",
+                    color: "hsl(var(--chart-1))",
+                  },
+                  in_progress: {
+                    label: "In Progress",
+                    color: "hsl(var(--chart-2))",
+                  },
+                  completed: {
+                    label: "Completed",
+                    color: "hsl(var(--chart-3))",
+                  },
+                } satisfies ChartConfig}
+              >
+                <BarChart
+                  data={[
+                    {
+                      status: "Pending",
+                      tasks: stats.todos.pending,
+                      fill: "var(--color-pending)",
+                    },
+                    {
+                      status: "In Progress",
+                      tasks: stats.todos.in_progress,
+                      fill: "var(--color-in_progress)",
+                    },
+                    {
+                      status: "Completed",
+                      tasks: stats.todos.completed,
+                      fill: "var(--color-completed)",
+                    },
+                  ]}
+                  layout="vertical"
+                  margin={{ left: 0 }}
+                >
+                  <YAxis
+                    dataKey="status"
+                    type="category"
+                    tickLine={false}
+                    tickMargin={10}
+                    axisLine={false}
+                  />
+                  <XAxis dataKey="tasks" type="number" hide />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent hideLabel />}
+                  />
+                  <Bar dataKey="tasks" layout="vertical" radius={5} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          {/* User Status Radial Chart */}
+          <Card className="flex flex-col">
+            <CardHeader className="items-center pb-0">
+              <CardTitle>User Engagement</CardTitle>
+              <CardDescription>Active vs Inactive breakdown</CardDescription>
+            </CardHeader>
+            <CardContent className="flex-1 pb-0">
+              <ChartContainer
+                config={{
+                  users: {
+                    label: "Users",
+                  },
+                  active: {
+                    label: "Active",
+                    color: "hsl(var(--chart-1))",
+                  },
+                  inactive: {
+                    label: "Inactive",
+                    color: "hsl(var(--chart-2))",
+                  },
+                } satisfies ChartConfig}
+                className="mx-auto aspect-square max-h-[250px]"
+              >
+                <PieChart>
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent hideLabel />}
+                  />
+                  <Pie
+                    data={[
+                      { status: "active", users: stats.users.active, fill: "var(--color-active)" },
+                      { status: "inactive", users: stats.users.inactive, fill: "var(--color-inactive)" },
+                    ]}
+                    dataKey="users"
+                    nameKey="status"
+                    innerRadius={60}
+                    strokeWidth={5}
+                  >
+                    <Label
+                      content={({ viewBox }) => {
+                        if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                          return (
+                            <text
+                              x={viewBox.cx}
+                              y={viewBox.cy}
+                              textAnchor="middle"
+                              dominantBaseline="middle"
+                            >
+                              <tspan
+                                x={viewBox.cx}
+                                y={viewBox.cy}
+                                className="fill-foreground text-3xl font-bold"
+                              >
+                                {stats.users.total.toLocaleString()}
+                              </tspan>
+                              <tspan
+                                x={viewBox.cx}
+                                y={(viewBox.cy || 0) + 24}
+                                className="fill-muted-foreground"
+                              >
+                                Total Users
+                              </tspan>
+                            </text>
+                          )
+                        }
+                      }}
+                    />
+                  </Pie>
+                  <ChartLegend
+                    content={<ChartLegendContent nameKey="status" />}
+                    className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
+                  />
+                </PieChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          {/* Lifetime Achievement */}
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>🏆 Lifetime Achievement</CardTitle>
+              <CardDescription>All-time completed tasks across the platform</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-center py-8">
+                <div className="text-center space-y-2">
+                  <div className="text-6xl font-bold text-green-600">
+                    {stats.todos.lifetime_completed.toLocaleString()}
+                  </div>
+                  <div className="text-lg text-muted-foreground">
+                    Total tasks harvested by all users
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    These tasks have been completed and archived permanently
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+        </div>
+      )}
+        </TabsContent>
+
+        {/* Users Tab */}
+        <TabsContent value="users" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>User Management</CardTitle>
+                  <CardDescription>View and manage all users in the system</CardDescription>
+                </div>
+                <div className="relative w-64">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search users..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {filteredUsers.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No users found matching "{searchQuery}"</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Username</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Verified</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.username}</TableCell>
                   <TableCell>{user.email}</TableCell>
@@ -254,11 +487,14 @@ export default function Admin() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Edit User Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
@@ -273,17 +509,17 @@ export default function Admin() {
           {editingUser && (
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>Username</Label>
+                <FormLabel>Username</FormLabel>
                 <div className="text-sm font-medium">{editingUser.username}</div>
               </div>
 
               <div className="space-y-2">
-                <Label>Email</Label>
+                <FormLabel>Email</FormLabel>
                 <div className="text-sm text-muted-foreground">{editingUser.email}</div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
+                <FormLabel htmlFor="role">Role</FormLabel>
                 <select
                   id="role"
                   value={selectedRole}
@@ -296,7 +532,7 @@ export default function Admin() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="active">Status</Label>
+                <FormLabel htmlFor="active">Status</FormLabel>
                 <select
                   id="active"
                   value={selectedActive ? 'active' : 'inactive'}

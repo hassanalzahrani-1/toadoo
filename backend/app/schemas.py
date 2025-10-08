@@ -95,6 +95,7 @@ class UserOut(UserBase):
     role: str
     is_active: bool
     is_verified: bool
+    total_completed_count: int
     created_at: datetime
     
     class Config:

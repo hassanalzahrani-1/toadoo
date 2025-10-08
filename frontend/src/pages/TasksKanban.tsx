@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, useDroppable, useDraggable } from '@dnd-kit/core';
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { todosAPI } from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -10,7 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Trash2, Edit, Clock, AlertCircle } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Plus, Trash2, Edit, Clock, AlertCircle, CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 interface Todo {
   id: number;
@@ -34,14 +36,16 @@ export default function TasksKanban() {
   const [loading, setLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isHarvestOpen, setIsHarvestOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const [activeId, setActiveId] = useState<number | null>(null);
+  const [showCompleted, setShowCompleted] = useState(true);
   
   // Form state
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [title, setTitle] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
-  const [dueDate, setDueDate] = useState<Date | null>(null);
+  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -75,6 +79,7 @@ export default function TasksKanban() {
         priority,
       };
       
+      // Set due date if provided
       if (dueDate) {
         payload.due_date = dueDate.toISOString();
       }
@@ -100,6 +105,7 @@ export default function TasksKanban() {
         priority,
       };
       
+      // Set due date if provided
       if (dueDate) {
         payload.due_date = dueDate.toISOString();
       }
@@ -164,7 +170,7 @@ export default function TasksKanban() {
     setTitle(todo.title);
     setDescription(todo.description || '');
     setPriority(todo.priority);
-    setDueDate(todo.due_date ? new Date(todo.due_date) : null);
+    setDueDate(todo.due_date ? new Date(todo.due_date) : undefined);
     setIsEditOpen(true);
   };
 
@@ -172,7 +178,7 @@ export default function TasksKanban() {
     setTitle('');
     setDescription('');
     setPriority('medium');
-    setDueDate(null);
+    setDueDate(undefined);
   };
 
   const getPriorityColor = (priority: Todo['priority']) => {
@@ -192,7 +198,29 @@ export default function TasksKanban() {
   };
 
   const getTodosByStatus = (status: Todo['status']) => {
-    return todos.filter(todo => todo.status === status);
+    const filtered = todos.filter(todo => todo.status === status);
+    if (status === 'completed' && !showCompleted) {
+      return [];
+    }
+    return filtered;
+  };
+
+  const handleHarvestCompleted = async () => {
+    try {
+      const response = await todosAPI.harvestCompleted();
+      toast.success(
+        `🎉 Harvested ${response.data.harvested} task${response.data.harvested > 1 ? 's' : ''}!`,
+        {
+          description: `🌾 Lifetime total: ${response.data.total_completed_count} tasks completed`,
+          duration: 5000,
+        }
+      );
+      setIsHarvestOpen(false);
+      fetchTodos();
+    } catch (error) {
+      console.error('Failed to harvest tasks:', error);
+      toast.error('Failed to harvest tasks');
+    }
   };
 
   const activeTodo = activeId ? todos.find(t => t.id === activeId) : null;
@@ -212,14 +240,39 @@ export default function TasksKanban() {
           </p>
         </div>
         
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              New Task
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowCompleted(!showCompleted)}
+          >
+            {showCompleted ? 'Hide' : 'Show'} Completed
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const completedCount = todos.filter(t => t.status === 'completed').length;
+              if (completedCount === 0) {
+                toast.error('No completed tasks to harvest');
+              } else {
+                setIsHarvestOpen(true);
+              }
+            }}
+            disabled={todos.filter(t => t.status === 'completed').length === 0}
+          >
+            🌾 Harvest Completed
+          </Button>
+
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                New Task
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
             <form onSubmit={handleCreate}>
               <DialogHeader>
                 <DialogTitle>Create New Task</DialogTitle>
@@ -265,18 +318,26 @@ export default function TasksKanban() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="dueDate">Due Date & Time</Label>
-                  <DatePicker
-                    selected={dueDate}
-                    onChange={(date) => setDueDate(date)}
-                    showTimeSelect
-                    timeFormat="HH:mm"
-                    timeIntervals={15}
-                    dateFormat="MMMM d, yyyy h:mm aa"
-                    placeholderText="Select date and time"
-                    wrapperClassName="w-full"
-                    className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm"
-                  />
+                  <Label>Due Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={dueDate}
+                        onSelect={setDueDate}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
 
@@ -289,6 +350,7 @@ export default function TasksKanban() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Kanban Board */}
@@ -450,18 +512,26 @@ export default function TasksKanban() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-dueDate">Due Date & Time</Label>
-                <DatePicker
-                  selected={dueDate}
-                  onChange={(date) => setDueDate(date)}
-                  showTimeSelect
-                  timeFormat="HH:mm"
-                  timeIntervals={15}
-                  dateFormat="MMMM d, yyyy h:mm aa"
-                  placeholderText="Select date and time"
-                  wrapperClassName="w-full"
-                  className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm"
-                />
+                <Label>Due Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={dueDate}
+                      onSelect={setDueDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
 
@@ -472,6 +542,46 @@ export default function TasksKanban() {
               <Button type="submit">Save Changes</Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Harvest Confirmation Dialog */}
+      <Dialog open={isHarvestOpen} onOpenChange={setIsHarvestOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>🌾 Harvest Tasks</DialogTitle>
+            <DialogDescription>
+              Delete completed tasks and add to your lifetime count.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex items-center justify-center py-4">
+            <div className="text-center">
+              <div className="text-4xl font-bold text-green-600 mb-1">
+                {todos.filter(t => t.status === 'completed').length}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                tasks to harvest
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setIsHarvestOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button"
+              onClick={handleHarvestCompleted}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              🌾 Harvest
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

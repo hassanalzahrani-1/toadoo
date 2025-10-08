@@ -9,6 +9,7 @@ interface User {
   role: string;
   is_active: boolean;
   is_verified: boolean;
+  total_completed_count: number;
   created_at: string;
 }
 

@@ -39,6 +39,7 @@ class User(Base):
     role = Column(Enum(UserRole), default=UserRole.USER, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     is_verified = Column(Boolean, default=False, nullable=False)
+    total_completed_count = Column(Integer, default=0, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
@@ -47,6 +48,7 @@ class User(Base):
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
     email_tokens = relationship("EmailVerificationToken", back_populates="user", cascade="all, delete-orphan")
     reset_tokens = relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")
+    harvest_history = relationship("HarvestHistory", back_populates="user", cascade="all, delete-orphan")
 
 
 class Todo(Base):
@@ -110,3 +112,16 @@ class PasswordResetToken(Base):
     
     # Relationship
     user = relationship("User", back_populates="reset_tokens")
+
+
+class HarvestHistory(Base):
+    """Harvest history ORM model - tracks when users harvest completed tasks."""
+    __tablename__ = "harvest_history"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    count = Column(Integer, nullable=False)  # Number of tasks harvested
+    harvested_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    
+    # Relationship
+    user = relationship("User", back_populates="harvest_history")

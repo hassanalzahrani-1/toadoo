@@ -1,9 +1,10 @@
 """Todo API endpoints with user authentication."""
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.dependencies.db import get_db
 from app.dependencies.auth import get_current_active_user
@@ -59,6 +60,96 @@ def list_todos(
     return [TodoOut.model_validate(todo) for todo in todos]
 
 
+@router.get("/leaderboard")
+def get_leaderboard(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+    period: str = "all-time",
+    limit: int = 20,
+):
+    """Get leaderboard rankings."""
+    from app.models import HarvestHistory
+    
+    if period == "all-time":
+        # All-time leaderboard based on total_completed_count (includes all users)
+        users = db.query(User).filter(
+            User.total_completed_count > 0
+        ).order_by(User.total_completed_count.desc()).limit(limit).all()
+        
+        leaderboard = [
+            {
+                "rank": idx + 1,
+                "user_id": user.id,
+                "username": user.username,
+                "count": user.total_completed_count,
+                "is_current_user": user.id == current_user.id
+            }
+            for idx, user in enumerate(users)
+        ]
+    
+    elif period == "monthly":
+        # Monthly leaderboard - sum harvests from last 30 days
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        
+        results = db.query(
+            User.id,
+            User.username,
+            func.sum(HarvestHistory.count).label('total_count')
+        ).join(
+            HarvestHistory, User.id == HarvestHistory.user_id
+        ).filter(
+            HarvestHistory.harvested_at >= thirty_days_ago
+        ).group_by(User.id, User.username).order_by(
+            func.sum(HarvestHistory.count).desc()
+        ).limit(limit).all()
+        
+        leaderboard = [
+            {
+                "rank": idx + 1,
+                "user_id": result.id,
+                "username": result.username,
+                "count": result.total_count or 0,
+                "is_current_user": result.id == current_user.id
+            }
+            for idx, result in enumerate(results)
+        ]
+    
+    elif period == "weekly":
+        # Weekly leaderboard - sum harvests from last 7 days
+        seven_days_ago = datetime.utcnow() - timedelta(days=7)
+        
+        results = db.query(
+            User.id,
+            User.username,
+            func.sum(HarvestHistory.count).label('total_count')
+        ).join(
+            HarvestHistory, User.id == HarvestHistory.user_id
+        ).filter(
+            HarvestHistory.harvested_at >= seven_days_ago
+        ).group_by(User.id, User.username).order_by(
+            func.sum(HarvestHistory.count).desc()
+        ).limit(limit).all()
+        
+        leaderboard = [
+            {
+                "rank": idx + 1,
+                "user_id": result.id,
+                "username": result.username,
+                "count": result.total_count or 0,
+                "is_current_user": result.id == current_user.id
+            }
+            for idx, result in enumerate(results)
+        ]
+    
+    else:
+        return {"error": "Invalid period. Use: all-time, monthly, or weekly"}
+    
+    return {
+        "period": period,
+        "leaderboard": leaderboard
+    }
+
+
 @router.get(
     "/{todo_id}",
     response_model=TodoOut,
@@ -105,3 +196,51 @@ def delete_todo(
 ) -> None:
     """Delete a todo (user-scoped)."""
     todo_repo.delete_todo(db, todo_id, current_user.id)
+
+
+@router.post(
+    "/harvest-completed",
+    summary="Harvest completed tasks",
+    description="Delete all completed tasks and increment user's lifetime completion counter.",
+)
+def harvest_completed_tasks(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Harvest (delete) all completed tasks and update user's total_completed_count."""
+    from app.models import Todo, HarvestHistory
+    
+    # Get all completed tasks for this user
+    completed_tasks = db.query(Todo).filter(
+        Todo.owner_id == current_user.id,
+        Todo.status == TodoStatus.COMPLETED
+    ).all()
+    
+    count = len(completed_tasks)
+    
+    if count == 0:
+        return {"harvested": 0, "total_completed_count": current_user.total_completed_count}
+    
+    # Delete all completed tasks
+    for task in completed_tasks:
+        db.delete(task)
+    
+    # Increment user's lifetime counter
+    current_user.total_completed_count += count
+    
+    # Log harvest history
+    harvest_record = HarvestHistory(
+        user_id=current_user.id,
+        count=count
+    )
+    db.add(harvest_record)
+    
+    db.commit()
+    db.refresh(current_user)
+    
+    return {
+        "harvested": count,
+        "total_completed_count": current_user.total_completed_count,
+        "user_id": current_user.id,
+        "username": current_user.username
+    }
