@@ -10,7 +10,7 @@ Built on [Phase 1 (Toado)](https://github.com/hassanalzahrani-1/Toado) foundatio
 
 ### 🎮 Gamification
 - **Harvest System** - Complete tasks and harvest them to earn permanent progress
-- **Ranking System** - Earn ranks based on lifetime completed tasks (🌱 Seedling → 🏆 Legend)
+- **Ranking System** - Evolve from 🐸 Young Toad to 🐸✨ Ancient Toad based on lifetime completed tasks
 - **Leaderboards** - Compete with others (All-time, Monthly, Weekly)
 - **Progress Tracking** - Visual rank-up progress bars
 
