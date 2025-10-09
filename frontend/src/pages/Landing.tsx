@@ -80,7 +80,7 @@ export default function Landing() {
               </div>
               <CardTitle>Ranking System</CardTitle>
               <CardDescription>
-                Earn ranks from 🌱 Seedling to 🏆 Legend based on completed tasks
+                Evolve from 🐸 Young Toad to 🐸✨ Ancient Toad based on completed tasks
               </CardDescription>
             </CardHeader>
           </Card>

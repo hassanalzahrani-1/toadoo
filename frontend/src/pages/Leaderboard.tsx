@@ -60,17 +60,17 @@ export default function Leaderboard() {
 
   const getRankBadge = (rank: number) => {
     if (rank === 1) return <Trophy className="h-5 w-5 text-yellow-500" />;
-    if (rank === 2) return <Medal className="h-5 w-5 text-gray-400" />;
     if (rank === 3) return <Award className="h-5 w-5 text-amber-600" />;
     return <span className="text-muted-foreground">#{rank}</span>;
   };
 
   const getRankEmoji = (count: number) => {
-    if (count >= 250) return '👑';
-    if (count >= 100) return '💎';
-    if (count >= 50) return '🥇';
-    if (count >= 10) return '🥈';
-    return '🥉';
+    if (count >= 250) return '🐸✨';
+    if (count >= 100) return '🤴🐸';
+    if (count >= 50) return '👑🐸';
+    if (count >= 25) return '🐸🪷';
+    if (count >= 10) return '🐸💚';
+    return '🐸';
   };
 
   const LeaderboardTable = ({ data }: { data: LeaderboardEntry[] }) => (

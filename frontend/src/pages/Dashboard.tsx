@@ -61,25 +61,26 @@ export default function Dashboard() {
   };
 
   const getRankEmoji = (count: number) => {
-    if (count >= 250) return '👑 Master';
-    if (count >= 100) return '💎 Diamond';
-    if (count >= 50) return '🥇 Gold';
-    if (count >= 10) return '🥈 Silver';
-    return '🥉 Bronze';
+    if (count >= 250) return '🐸✨ Ancient Toad';
+    if (count >= 100) return '🤴🐸 Toad King';
+    if (count >= 50) return '👑🐸 Swamp Lord';
+    if (count >= 25) return '🐸🪷 Lily Pad Master';
+    if (count >= 10) return '🐸💚 Pond Hopper';
+    return '🐸 Young Toad';
   };
 
   const getNextRankInfo = (count: number) => {
     if (count >= 250) return { next: 'Max Rank!', needed: 0, total: 250 };
-    if (count >= 100) return { next: '👑 Master', needed: 250 - count, total: 250 };
-    if (count >= 50) return { next: '💎 Diamond', needed: 100 - count, total: 100 };
-    if (count >= 10) return { next: '🥇 Gold', needed: 50 - count, total: 50 };
-    return { next: '🥈 Silver', needed: 10 - count, total: 10 };
+    if (count >= 100) return { next: '🐸✨ Ancient Toad', needed: 250 - count, total: 250 };
+    if (count >= 50) return { next: '🤴🐸 Toad King', needed: 100 - count, total: 100 };
+    if (count >= 25) return { next: '👑🐸 Swamp Lord', needed: 50 - count, total: 50 };
+    if (count >= 10) return { next: '🐸🪷 Lily Pad Master', needed: 25 - count, total: 25 };
+    return { next: '🐸💚 Pond Hopper', needed: 10 - count, total: 10 };
   };
 
   const totalTasks = todos.length;
   const inProgressTasks = todos.filter(t => t.status === 'in_progress').length;
   const completedTasks = todos.filter(t => t.status === 'completed').length;
-
   const recentTodos = todos
     .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
     .slice(0, 5);

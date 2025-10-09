@@ -187,15 +187,14 @@ After first migration, create an admin user:
 ### Rank System
 Users earn ranks based on their `total_completed_count` (lifetime harvested tasks):
 
-| Rank | Tasks Required | Emoji |
-|------|---------------|-------|
-| Seedling | 0-9 | 🌱 |
-| Sprout | 10-24 | 🌿 |
-| Sapling | 25-49 | 🌳 |
-| Tree | 50-99 | 🎄 |
-| Forest | 100-249 | 🌲 |
-| Champion | 250-499 | 🏅 |
-| Legend | 500+ | 🏆 |
+| Rank | Tasks Required | Name | Emoji |
+|------|---------------|------|-------|
+| 1 | 0-9 | Young Toad | 🐸 |
+| 2 | 10-24 | Pond Hopper | 🐸💚 |
+| 3 | 25-49 | Lily Pad Master | 🐸🪷 |
+| 4 | 50-99 | Swamp Lord | 👑🐸 |
+| 5 | 100-249 | Toad King | 🤴🐸 |
+| 6 | 250+ | Ancient Toad | 🐸✨ |
 
 ### Harvest System
 1. Complete todos (move to "Completed" column)
