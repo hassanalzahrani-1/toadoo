@@ -86,7 +86,29 @@ toadoo/
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Docker)
+```bash
+docker compose up
+```
+
+**Runtime details**
+- **Frontend** Available at `http://localhost:5173` (Vite dev server prints the URL in logs).
+- **Backend** Available at `http://localhost:8000` (FastAPI with interactive docs at `/docs`).
+
+**Live reload**
+- **Frontend** Edits under `frontend/` trigger Vite hot module reload inside the container.
+- **Backend** Edits under `backend/` trigger `uvicorn --reload` restarts automatically.
+
+**Rebuild containers**
+- **Dependencies changed** Run `docker compose up --build` after modifying `package.json`, `package-lock.json`, or `requirements.txt`.
+- **Reset environment** Run `docker compose down --volumes` followed by `docker compose up --build` if native modules become inconsistent.
+
+**Inspect ports**
+- **Command** `docker compose ps` lists running services and published ports.
+
+---
+
+## 🛠️ Manual Setup (Optional)
 
 ### Prerequisites
 - Python 3.8+
