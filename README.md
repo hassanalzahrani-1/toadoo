@@ -92,8 +92,8 @@ docker compose up
 ```
 
 **Runtime details**
-- **Frontend** Available at `http://localhost:5173` (Vite dev server prints the URL in logs).
-- **Backend** Available at `http://localhost:8000` (FastAPI with interactive docs at `/docs`).
+- **Frontend** Available at `http://localhost` (proxied to the Vite dev server).
+- **Backend API** Available at `http://localhost/api` (FastAPI docs at `http://localhost/api/docs`).
 
 **Live reload**
 - **Frontend** Edits under `frontend/` trigger Vite hot module reload inside the container.
@@ -104,7 +104,10 @@ docker compose up
 - **Reset environment** Run `docker compose down --volumes` followed by `docker compose up --build` if native modules become inconsistent.
 
 **Inspect ports**
-- **Command** `docker compose ps` lists running services and published ports.
+- **Command** `docker compose ps` lists running services and published ports (`nginx` exposes port 80).
+
+**Nginx config**
+- **File** `nginx/default.conf` routes `/` to `frontend:5173` and `/api/` to `backend:8000`.
 
 ---
 

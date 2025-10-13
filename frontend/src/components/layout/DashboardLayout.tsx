@@ -10,10 +10,10 @@ export default function DashboardLayout() {
   const location = useLocation();
 
   const navigation = [
-    { name: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
-    { name: 'My Tasks', href: '/app/tasks', icon: CheckSquare },
-    { name: 'Leaderboard', href: '/app/leaderboard', icon: Trophy },
-    ...(user?.role === 'admin' ? [{ name: 'Admin', href: '/app/admin', icon: Shield }] : []),
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'My Tasks', href: '/tasks', icon: CheckSquare },
+    { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
+    ...(user?.role === 'admin' ? [{ name: 'Admin', href: '/admin', icon: Shield }] : []),
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -34,7 +34,7 @@ export default function DashboardLayout() {
         <div className="flex h-full flex-col">
           {/* Logo */}
           <div className="flex h-16 items-center border-b px-6">
-            <Link to="/app/dashboard" className="flex items-center gap-2 font-bold text-xl">
+            <Link to="/dashboard" className="flex items-center gap-2 font-bold text-xl">
               🐸 <span>Toadoo</span>
             </Link>
           </div>
@@ -80,13 +80,13 @@ export default function DashboardLayout() {
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to="/app/profile" className="cursor-pointer">
+                  <Link to="/profile" className="cursor-pointer">
                     <User className="mr-2 h-4 w-4" />
                     Profile
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/app/settings" className="cursor-pointer">
+                  <Link to="/settings" className="cursor-pointer">
                     <Settings className="mr-2 h-4 w-4" />
                     Settings
                   </Link>

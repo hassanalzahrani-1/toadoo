@@ -31,16 +31,15 @@ function App() {
       <Toaster position="top-right" richColors />
       <Routes>
       {/* Public routes */}
-      <Route path="/" element={!isAuthenticated ? <Landing /> : <Navigate to="/app/dashboard" replace />} />
-      <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/app/dashboard" replace />} />
-      <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/app/dashboard" replace />} />
+      <Route path="/" element={!isAuthenticated ? <Landing /> : <Navigate to="/dashboard" replace />} />
+      <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" replace />} />
+      <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/dashboard" replace />} />
       
       {/* Protected routes with layout */}
       <Route
-        path="/app"
+        path="/"
         element={isAuthenticated ? <DashboardLayout /> : <Navigate to="/login" replace />}
       >
-        <Route index element={<Navigate to="/app/dashboard" replace />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="tasks" element={<TasksKanban />} />
         <Route path="leaderboard" element={<Leaderboard />} />

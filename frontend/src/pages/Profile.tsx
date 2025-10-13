@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { User, Mail, Shield, Calendar, CheckCircle, XCircle, Trophy } from 'lucide-react';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Profile() {
   const { user } = useAuth();
@@ -15,23 +15,30 @@ export default function Profile() {
 
   useEffect(() => {
     if (user) {
+      setLoading(true);
       fetchUserRank();
+    } else {
+      setLoading(false);
     }
   }, [user]);
 
   const fetchUserRank = async () => {
     try {
       const token = localStorage.getItem('access_token');
-      const response = await axios.get(`${API_URL}/todos/leaderboard?period=all-time`, {
+      const response = await axios.get(`${API_URL}/todos/leaderboard`, {
+        params: { period: 'all-time', limit: 1000 },
         headers: { Authorization: `Bearer ${token}` }
       });
       
       const myEntry = response.data.leaderboard.find((entry: any) => entry.is_current_user);
       if (myEntry) {
         setRank(myEntry.rank);
+      } else {
+        setRank(null);
       }
     } catch (error) {
       console.error('Failed to fetch rank:', error);
+    } finally {
       setLoading(false);
     }
   };
