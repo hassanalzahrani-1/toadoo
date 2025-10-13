@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Trophy, Medal, Award } from 'lucide-react';
+import { Trophy, Award } from 'lucide-react';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
@@ -177,33 +177,39 @@ export default function Leaderboard() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Rank System</CardTitle>
+          <CardTitle>🐸 Toad Evolution</CardTitle>
+          <CardDescription>Complete tasks to evolve your toad</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-center">
             <div>
-              <div className="text-3xl mb-2">🥉</div>
-              <div className="font-medium">Bronze</div>
+              <div className="text-3xl mb-2">🐸</div>
+              <div className="font-medium">Young Toad</div>
               <div className="text-sm text-muted-foreground">0-9 tasks</div>
             </div>
             <div>
-              <div className="text-3xl mb-2">🥈</div>
-              <div className="font-medium">Silver</div>
-              <div className="text-sm text-muted-foreground">10-49 tasks</div>
+              <div className="text-3xl mb-2">🐸💚</div>
+              <div className="font-medium">Pond Hopper</div>
+              <div className="text-sm text-muted-foreground">10-24 tasks</div>
             </div>
             <div>
-              <div className="text-3xl mb-2">🥇</div>
-              <div className="font-medium">Gold</div>
+              <div className="text-3xl mb-2">🐸🪷</div>
+              <div className="font-medium">Lily Pad Master</div>
+              <div className="text-sm text-muted-foreground">25-49 tasks</div>
+            </div>
+            <div>
+              <div className="text-3xl mb-2">👑🐸</div>
+              <div className="font-medium">Swamp Lord</div>
               <div className="text-sm text-muted-foreground">50-99 tasks</div>
             </div>
             <div>
-              <div className="text-3xl mb-2">💎</div>
-              <div className="font-medium">Diamond</div>
+              <div className="text-3xl mb-2">🤴🐸</div>
+              <div className="font-medium">Toad King</div>
               <div className="text-sm text-muted-foreground">100-249 tasks</div>
             </div>
             <div>
-              <div className="text-3xl mb-2">👑</div>
-              <div className="font-medium">Master</div>
+              <div className="text-3xl mb-2">🐸✨</div>
+              <div className="font-medium">Ancient Toad</div>
               <div className="text-sm text-muted-foreground">250+ tasks</div>
             </div>
           </div>
