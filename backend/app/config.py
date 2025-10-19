@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     """Application settings with environment variable support."""
     
     # Database
-    DATABASE_URL: str = "sqlite:///./toadoo.db"
+    DATABASE_URL: str = "sqlite:///./data/toadoo.db"
     
     # JWT Authentication
     SECRET_KEY: str = "CHANGE_THIS_IN_PRODUCTION"  # Override in .env file
@@ -33,7 +33,11 @@ class Settings(BaseSettings):
     APP_VERSION: str = "2.0.0"
     
     # CORS
-    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173"]
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:3000", 
+        "http://localhost:5173",
+        "https://toadoo.us-east-1.elasticbeanstalk.com"
+    ]
     
     class Config:
         env_file = ".env"

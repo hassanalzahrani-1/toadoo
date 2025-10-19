@@ -1,5 +1,7 @@
 """FastAPI application entry point."""
 import logging
+import os
+import pathlib
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -55,8 +57,35 @@ app.include_router(admin.router, prefix="/api")
 async def startup_event():
     """Initialize database tables on startup."""
     logger.info("Starting up Toadoo API...")
-    create_tables()
-    logger.info("Database tables created successfully")
+    
+    # Extract the database path from the URL
+    db_url = settings.DATABASE_URL
+    if db_url.startswith("sqlite:///"):
+        # Remove the sqlite:/// prefix
+        db_path = db_url.replace("sqlite:///", "")
+        
+        # Handle relative paths
+        if db_path.startswith("./"):
+            db_path = db_path[2:]
+        
+        # Convert to absolute path if needed
+        if not os.path.isabs(db_path):
+            db_path = os.path.join(os.getcwd(), db_path)
+        
+        # Check if the database file exists
+        if os.path.exists(db_path):
+            logger.info(f"Using existing database at {db_path}")
+        else:
+            # Create parent directories if they don't exist
+            os.makedirs(os.path.dirname(db_path), exist_ok=True)
+            logger.info(f"Creating new database at {db_path}")
+            create_tables()
+            logger.info("Database tables created successfully")
+    else:
+        # For non-SQLite databases, always run create_tables
+        # (it's safe as it only creates tables if they don't exist)
+        create_tables()
+        logger.info("Database tables created successfully")
 
 
 @app.on_event("shutdown")

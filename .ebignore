@@ -1,0 +1,58 @@
+# Git
+.git/
+.gitignore
+
+# Environment files
+**/.env
+**/.env.*
+**/.venv
+**/env/
+**/venv/
+
+# Python
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.pytest_cache/
+**/.coverage
+**/htmlcov/
+**/.tox/
+**/.nox/
+**/.hypothesis/
+**/.egg-info/
+**/.eggs/
+
+# Node.js
+**/node_modules/
+**/npm-debug.log
+**/yarn-debug.log
+**/yarn-error.log
+**/.pnp/
+**/.pnp.js
+**/.cache/
+
+# Build outputs
+**/dist/
+**/build/
+**/.next/
+**/.nuxt/
+**/out/
+
+# Local development
+**/.idea/
+**/.vscode/
+**/*.swp
+**/*.swo
+**/.DS_Store
+**/Thumbs.db
+
+# Docker
+**/docker-compose.yml
+**/docker-compose.*.yml
+**/Dockerfile.dev
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
